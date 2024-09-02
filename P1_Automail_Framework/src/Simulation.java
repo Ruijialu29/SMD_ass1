@@ -73,7 +73,7 @@ public class Simulation {
         }
 
     void run() {
-        while (time++ <= endArrival && mailroom.someItems()) {
+        while (time++ <= endArrival || mailroom.someItems()) {
             step();
             try {
                 TimeUnit.MILLISECONDS.sleep(timeout);
