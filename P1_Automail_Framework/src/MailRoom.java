@@ -63,10 +63,9 @@ public class MailRoom {
         else if(mode == Mode.FLOORING){
             idleRobots.add(new ColumnRobot(MailRoom.this, capacity));
             idleRobots.add(new ColumnRobot(MailRoom.this, capacity));
-
             Building building = Building.getBuilding();
             for (int i = 0; i < building.NUMFLOORS; i++) {
-                activeRobots.add(new FloorRobot(MailRoom.this, capacity));
+                activeRobots.add(new FloorRobot(MailRoom.this, capacity, i+1, 1, activeColumnRobots));
             }
         }
     }
@@ -110,7 +109,7 @@ public class MailRoom {
                     left = 1;
                     leftRobot = robot;
                 }
-                else if(robot.getRoom() == Building.getBuilding().NUMROOMS+1){
+                else if(robot.getRoom() == (rooms + 1)){
                     right = 1;
                     rightRobot = robot; 
                 }
@@ -131,6 +130,7 @@ public class MailRoom {
                 return 1;
             }
         }
+        
         return -1;
     }
 
@@ -197,7 +197,7 @@ public class MailRoom {
             }
 
             else {   
-                if(robot.getFloor() == robot.items.get(0).myFloor() && robot.getRoom() == robot.items.get(0).myRoom()){
+                if(robot.getFloor() == robot.items.getFirst().myFloor() && robot.getRoom() == robot.items.getFirst().myRoom()){
                     do {
                         Item firsItem = robot.items.get(0);
                         robot.setRemainingCapacity(robot.getRemainingCapacity() + firsItem.myWeight());
@@ -277,7 +277,7 @@ public class MailRoom {
     }
 
     void robotDispatch() {
-        if(mode == Mode.CYCLING){
+        if(this.mode == Mode.CYCLING){
             // Can dispatch at most one robot; it needs to move out of the way for the next
             System.out.println("Dispatch at time = " + Simulation.now());
             // Need an idle robot and space to dispatch (could be a traffic jam)
@@ -297,7 +297,6 @@ public class MailRoom {
         }
 
         else if(mode == Mode.FLOORING){
-            
             
             if (!isInitialized) {
                 int floor = 1;

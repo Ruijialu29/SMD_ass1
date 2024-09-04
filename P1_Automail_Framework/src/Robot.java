@@ -6,8 +6,8 @@ import java.util.ListIterator;
 public class Robot {
     private static int count = 1;
     final private String id;
-    private int floor;
-    private int room;
+    protected int floor;
+    protected int room;
     private int remainingCapacity;
     final private MailRoom mailroom;
     final protected List<Item> items = new ArrayList<>();
