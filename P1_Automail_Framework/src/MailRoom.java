@@ -104,7 +104,7 @@ public class MailRoom {
         Robot rightRobot = null;
 
         for(Robot robot : activeColumnRobots){
-            if(robot.getFloor() == r.getFloor() && robot.items.getFirst().myFloor() == r.getFloor() && !robot.items.isEmpty()){
+            if(robot.getFloor() == r.getFloor() && !robot.items.isEmpty() && robot.items.get(0).myFloor() == r.getFloor()){
                 if(robot.getRoom() == 0){
                     left = 1;
                     leftRobot = robot;
