@@ -8,6 +8,7 @@ public class Robot {
     final private String id;
     protected int floor;
     protected int room;
+    protected int load;
     private int remainingCapacity;
 
     final private MailRoom mailroom;
@@ -31,12 +32,21 @@ public class Robot {
         return remainingCapacity;
     }
 
+    public int getLoad(){
+        load = 0;
+        for(Item item: items){
+            load += item.myWeight();
+        }
+
+        return load;
+    }
+
     public void setRemainingCapacity(int remainingCapacity) {
         this.remainingCapacity = remainingCapacity;
     }
 
     public String toString() {
-        return "Id: " + id + " Floor: " + floor + ", Room: " + room + ", #items: " + numItems() + ", Load: " + 0 ;
+        return "Id: " + id + " Floor: " + floor + ", Room: " + room + ", #items: " + numItems() + ", Load: " + getLoad() ;
     }
 
     public boolean isEmpty() { return items.isEmpty(); }
