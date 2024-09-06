@@ -34,7 +34,7 @@ public class MailRoom {
 
         if(mode == Mode.CYCLING){
             for (int i = 0; i < numRobots; i++)
-                idleRobots.add(new Robot(MailRoom.this, capacity));  // In mailroom, floor/room is not significant
+                idleRobots.add(new CyclingRobot(MailRoom.this, capacity));  // In mailroom, floor/room is not significant
         }
         else if(mode == Mode.FLOORING){
             idleRobots.add(new ColumnRobot(MailRoom.this, capacity));
