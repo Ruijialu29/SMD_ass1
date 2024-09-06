@@ -78,60 +78,44 @@ public class MailRoom {
         }
     }
 
-    public int isEarlier(Robot r1, Robot r2){
-        List<Item> items1 = r1.items;
-        List<Item> items2 = r2.items;
+    public int compareArrivalTime(Robot r1, Robot r2){
 
-        Collections.sort(items1, Comparator.comparingInt(Item::myArrival));
-        Collections.sort(items2, Comparator.comparingInt(Item::myArrival));
+        Collections.sort(r1.items, Comparator.comparingInt(Item::myArrival));
+        Collections.sort(r2.items, Comparator.comparingInt(Item::myArrival));
 
-        if(items1.get(0).myArrival() < items2.get(0).myArrival()){
-            return 0;
-        }
-        else if(items1.get(0).myArrival() > items2.get(0).myArrival()){
-            return 1;
-        }
-        else if(items1.get(0).myArrival() == items2.get(0).myArrival()){
-            return 0;
-        }
-        return -1;
+        int arrivalTime1 = r1.items.get(0).myArrival();
+        int arrivalTime2 = r2.items.get(0).myArrival();
+
+        return Integer.compare(arrivalTime1, arrivalTime2);
+
     }
 
-    public int isWaiting(Robot r){
-        int left = 0;
-        int right = 0;
+    public int checkWaitingPosition(Robot r){
+
         Robot leftRobot = null;
         Robot rightRobot = null;
 
         for(Robot robot : activeColumnRobots){
             if(robot.getFloor() == r.getFloor() && !robot.items.isEmpty() && robot.items.get(0).myFloor() == r.getFloor()){
                 if(robot.getRoom() == 0){
-                    left = 1;
                     leftRobot = robot;
                 }
                 else if(robot.getRoom() == (rooms + 1)){
-                    right = 1;
                     rightRobot = robot; 
                 }
             }
         }
 
-        if(left == 1 && right == 0){
+        if (leftRobot != null && rightRobot == null) {
             return 0;
-        }
-        else if(left == 0 && right == 1){
+        } else if (leftRobot == null && rightRobot != null) {
             return 1;
+        } else if (leftRobot != null && rightRobot != null) {
+            return compareArrivalTime(leftRobot, rightRobot);
         }
-        else if(left == 1 && right == 1){
-            if(isEarlier(leftRobot, rightRobot) == 0){
-                return 0;
-            }
-            else if(isEarlier(leftRobot, rightRobot) == 1){
-                return 1;
-            }
-        }
-        
+    
         return -1;
+
     }
 
     public void cyclingTick(){
@@ -150,118 +134,112 @@ public class MailRoom {
     }
 
     public void flooringTick(){
-
-        // The behavviours of floor robots
-        for(Robot robot : activeRobots){
-            System.out.printf("About to tick: " + robot.toString() + "\n");
-            // 当robot空载时，要么原地不动，要么检测到有ColumnRobot在等待，就向ColumnRobot移动
-            if(robot.items.isEmpty()){
-                // 如果此时floor robot和column robot在左侧相邻，就传递item
-                if(isWaiting(robot) == 0 && robot.getRoom() == 1){
-                    Robot providerRobot = null;
-                    for(Robot columnRobot : activeColumnRobots){
-                        if(columnRobot.getId().equals("R1")){
-                            providerRobot = columnRobot;
-                            break;
-                        }
-                    }
-
-                    if(providerRobot != null){
-                        robot.transfer(providerRobot);
-                    }
-                    ((FloorRobot)robot).setTransferPosition(0);
-                }
-                // 如果此时floor robot和column robot不相邻，则floor robot向column robot移动(向左移动)
-                else if(isWaiting(robot) == 0 && robot.getRoom() != 1){
-                    robot.move(Building.Direction.LEFT);
-                }
-                // 如果此时floor robot和column在右侧相邻，就传递item
-                else if(isWaiting(robot) == 1 && robot.getRoom() == rooms){
-                    Robot providerRobot = null;
-                    for(Robot columnRobot : activeColumnRobots){
-                        if(columnRobot.getId().equals("R2")){
-                            providerRobot = columnRobot;
-                            break;
-                        }
-                    }
-
-                    if(providerRobot != null){
-                        robot.transfer(providerRobot);
-                    }
-                    ((FloorRobot)robot).setTransferPosition(1);
-                }
-                // 如果此时floor robot和column robot不相邻，则floor robot向column robot移动（向右移动）
-                else if(isWaiting(robot) == 1 && robot.getRoom() != rooms){
-                    robot.move(Building.Direction.RIGHT);
-                }
+        // Process the flooring robots(empty and loaded)
+        for (Robot robot : activeRobots) {
+            System.out.printf("About to tick: %s\n", robot);
+            if (robot.items.isEmpty()) {
+                processEmptyFlooringRobot(robot);
+            } else {
+                processLoadedFlooringRobot(robot);
             }
-
-            else {   
-                if(robot.getFloor() == robot.items.getFirst().myFloor() && robot.getRoom() == robot.items.getFirst().myRoom()){
-                    do {
-                        Item firsItem = robot.items.get(0);
-                        robot.setRemainingCapacity(robot.getRemainingCapacity() + firsItem.myWeight());
-                        Simulation.deliver(robot.items.removeFirst());
-                    } while(!robot.items.isEmpty() && robot.getRoom() == robot.items.get(0).myRoom());
-                }
-
-                else if(((FloorRobot)robot).getTransferPosition() == 0){
-                    robot.move(Building.Direction.RIGHT);
-                }
-                else if(((FloorRobot)robot).getTransferPosition() == 1){
-                    robot.move(Building.Direction.LEFT);
-                }
-            }
-
         }
 
         robotDispatch();
 
-        // The behaviours of column robots
-        for(Robot robot : activeColumnRobots){
-            if(!robot.items.isEmpty() && robot.getFloor() != robot.items.get(0).myFloor()){
-                robot.move(Building.Direction.UP);
+        processColumnRobots();
+
+        dispatchIdleRobots();
+
+        processDeactivatingRobots();
+
+    }
+
+    public void processEmptyFlooringRobot(Robot robot){
+        int waitingPosition = checkWaitingPosition(robot);
+        if (waitingPosition == 0 && robot.getRoom() == 1) {
+            transferItemToRobot(robot, "R1", 0);
+        }   
+        else if (waitingPosition == 0 && robot.getRoom() != 1) {
+            robot.move(Building.Direction.LEFT);
+        }   
+        else if (waitingPosition == 1 && robot.getRoom() == rooms) {
+            transferItemToRobot(robot, "R2", 1);
+        }   
+        else if (waitingPosition == 1 && robot.getRoom() != rooms) {
+            robot.move(Building.Direction.RIGHT);
+        }
+    }
+
+    public void processLoadedFlooringRobot(Robot robot) {
+        if (robot.getFloor() == robot.items.getFirst().myFloor() && robot.getRoom() == robot.items.getFirst().myRoom()) {
+            do {
+                Item firstItem = robot.items.get(0);
+                robot.setRemainingCapacity(robot.getRemainingCapacity() + firstItem.myWeight());
+                Simulation.deliver(robot.items.removeFirst());
+            } while (!robot.items.isEmpty() && robot.getRoom() == robot.items.get(0).myRoom());
+        } else {
+            if (((FloorRobot) robot).getTransferPosition() == 0) {
+                robot.move(Building.Direction.RIGHT);
+            } 
+            else if (((FloorRobot) robot).getTransferPosition() == 1) {
+                robot.move(Building.Direction.LEFT);
             }
-            else if(!robot.items.isEmpty() && robot.getFloor() == robot.items.get(0).myFloor()){}
-            else if(robot.items.isEmpty() && robot.getFloor() != 0){
+        }
+    }
+
+    public void transferItemToRobot(Robot robot, String providerId, int transferPosition) {
+        Robot providerRobot = activeColumnRobots.stream().filter(columnRobot -> columnRobot.getId().equals(providerId)).findFirst().orElse(null);
+        if (providerRobot != null) {
+            robot.transfer(providerRobot);
+        }
+        ((FloorRobot) robot).setTransferPosition(transferPosition);
+    }
+
+    public void processColumnRobots() {
+        for (Robot robot : activeColumnRobots) {
+            if (!robot.items.isEmpty() && robot.getFloor() != robot.items.get(0).myFloor()) {
+                robot.move(Building.Direction.UP);
+            } else if (robot.items.isEmpty() && robot.getFloor() != 0) {
                 robot.move(Building.Direction.DOWN);
             }
         }
+    }
 
-        // Dispatch column robots
+    public void dispatchIdleRobots() {
         int length = idleRobots.size();
-        while(length > 0){
+        while (length > 0) {
             System.out.println("Dispatch at time = " + Simulation.now());
-            int fwei = floorWithEarliestItem();
-            // Need an idle robot and space to dispatch (could be a traffic jam)
-            if (fwei >= 0) {
-                // Need an item or items to deliver, starting with earliest
+            int earliestFloor = floorWithEarliestItem();
+            if (earliestFloor >= 0) {
                 Robot robot = idleRobots.remove();
-                length -= 1;
-                loadRobot(fwei, robot);
-                // Room order for left to right delivery
-                if(robot.getId().equals("R1")){
+                length--;
+                loadRobot(earliestFloor, robot);
+
+                if (robot.getId().equals("R1")) {
                     robot.sort();
+                } 
+                else if (robot.getId().equals("R2")) {
+                    robot.items.sort(Comparator.reverseOrder());
                 }
-                else if(robot.getId().equals("R2")){
-                    Collections.sort(robot.items, Comparator.reverseOrder());
-                }
+
                 activeColumnRobots.add(robot);
-                System.out.println("Dispatch @ " + Simulation.now() +
-                        " of Robot " + robot.getId() + " with " + robot.numItems() + " item(s)");
-                if(robot.getId().equals("R1")){
+                System.out.printf("Dispatch @ %s of Robot %s with %d item(s)\n", Simulation.now(), robot.getId(), robot.numItems());
+
+                if (robot.getId().equals("R1")) {
                     robot.place(0, 0);
-                }
-                else if(robot.getId().equals("R2")){
-                    robot.place(0, rooms+1);
+                }           
+                else if (robot.getId().equals("R2")) {
+                    robot.place(0, rooms + 1);
                 }
             }
         }
+    }
 
-        ListIterator<Robot> iter = deactivatingRobots.listIterator();
-        while (iter.hasNext()) {  // In timestamp order
-            Robot robot = iter.next();
-            iter.remove();
+    public void processDeactivatingRobots() {
+        ListIterator<Robot> iterator = deactivatingRobots.listIterator();
+        while (iterator.hasNext()) {
+            Robot robot = iterator.next();
+            iterator.remove();
             activeColumnRobots.remove(robot);
             idleRobots.add(robot);
         }
@@ -297,7 +275,7 @@ public class MailRoom {
         }
 
         else if(mode == Mode.FLOORING){
-            
+            // Dispatch floor robots
             if (!isInitialized) {
                 int floor = 1;
                 for (Robot robot : activeRobots) {
