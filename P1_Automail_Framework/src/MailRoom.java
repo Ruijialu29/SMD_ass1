@@ -74,7 +74,7 @@ public class MailRoom {
         for (Item item : items) {
             waitingForDelivery[item.myFloor()-1].add(item);
             System.out.printf("Item: Time = %d Floor = %d Room = %d Weight = %d\n",
-                    item.myArrival(), item.myFloor(), item.myRoom(), 0);
+                    item.myArrival(), item.myFloor(), item.myRoom(), item.myWeight());
         }
     }
 
