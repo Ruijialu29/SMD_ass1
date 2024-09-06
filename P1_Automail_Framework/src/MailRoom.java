@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 public class MailRoom {
     public enum Mode {CYCLING, FLOORING}
-    List<Item>[] waitingForDelivery;
+    public List<Item>[] waitingForDelivery;
     private final int numRobots;
     private final Mode mode;
     private int capacity;
@@ -16,31 +16,7 @@ public class MailRoom {
     List<Robot> deactivatingRobots; // Don't treat a robot as both active and idle by swapping directly
     List<Robot> activeColumnRobots;
 
-    public boolean someItems() {
-        for (int i = 0; i < Building.getBuilding().NUMFLOORS; i++) {
-            if (!waitingForDelivery[i].isEmpty()) {
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    private int floorWithEarliestItem() {
-        int floor = -1;
-        int earliest = Simulation.now() + 1;
-        for (int i = 0; i < Building.getBuilding().NUMFLOORS; i++) {
-            if (!waitingForDelivery[i].isEmpty()) {
-                int arrival = waitingForDelivery[i].getFirst().myArrival();
-                if (earliest > arrival) {
-                    floor = i;
-                    earliest = arrival;
-                }
-            }
-        }
-        return floor;
-    }
-
-    MailRoom(int numFloors, int numRobots, Mode mode, int capacity, int rooms) {
+    public MailRoom(int numFloors, int numRobots, Mode mode, int capacity, int rooms) {
         this.mode = mode;
         this.capacity = capacity;
         this.rooms = rooms;
@@ -70,7 +46,31 @@ public class MailRoom {
         }
     }
 
-    void arrive(List<Item> items) {
+    public boolean someItems() {
+        for (int i = 0; i < Building.getBuilding().NUMFLOORS; i++) {
+            if (!waitingForDelivery[i].isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int floorWithEarliestItem() {
+        int floor = -1;
+        int earliest = Simulation.now() + 1;
+        for (int i = 0; i < Building.getBuilding().NUMFLOORS; i++) {
+            if (!waitingForDelivery[i].isEmpty()) {
+                int arrival = waitingForDelivery[i].getFirst().myArrival();
+                if (earliest > arrival) {
+                    floor = i;
+                    earliest = arrival;
+                }
+            }
+        }
+        return floor;
+    }
+
+    public void arrive(List<Item> items) {
         for (Item item : items) {
             waitingForDelivery[item.myFloor()-1].add(item);
             System.out.printf("Item: Time = %d Floor = %d Room = %d Weight = %d\n",
@@ -276,7 +276,7 @@ public class MailRoom {
         }
     }
 
-    void robotDispatch() {
+    public void robotDispatch() {
         if(this.mode == Mode.CYCLING){
             // Can dispatch at most one robot; it needs to move out of the way for the next
             System.out.println("Dispatch at time = " + Simulation.now());
@@ -309,7 +309,7 @@ public class MailRoom {
         }
     }
 
-    void robotReturn(Robot robot) {
+    public void robotReturn(Robot robot) {
         Building building = Building.getBuilding();
         int floor = robot.getFloor();
         int room = robot.getRoom();
@@ -319,7 +319,7 @@ public class MailRoom {
         deactivatingRobots.add(robot);
     }
 
-    void loadRobot(int floor, Robot robot) {
+    public void loadRobot(int floor, Robot robot) {
         Collections.sort(waitingForDelivery[floor], Comparator.comparingInt(Item::myArrival));
 
         ListIterator<Item> iter = waitingForDelivery[floor].listIterator();

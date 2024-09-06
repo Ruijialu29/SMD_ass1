@@ -9,22 +9,23 @@ public class Robot {
     protected int floor;
     protected int room;
     private int remainingCapacity;
+
     final private MailRoom mailroom;
     final protected List<Item> items = new ArrayList<>();
 
-    public String toString() {
-        return "Id: " + id + " Floor: " + floor + ", Room: " + room + ", #items: " + numItems() + ", Load: " + 0 ;
-    }
-
-    Robot(MailRoom mailroom, int remainingCapacity) {
+    public Robot(MailRoom mailroom, int remainingCapacity) {
         this.id = "R" + count++;
         this.mailroom = mailroom;
         this.remainingCapacity = remainingCapacity;
     }
 
-    int getFloor() { return floor; }
-    int getRoom() { return room; }
-    boolean isEmpty() { return items.isEmpty(); }
+    public String getId() {
+        return id;
+    }
+
+    public int getFloor() { return floor; }
+
+    public int getRoom() { return room; }
 
     public int getRemainingCapacity() {
         return remainingCapacity;
@@ -33,6 +34,13 @@ public class Robot {
     public void setRemainingCapacity(int remainingCapacity) {
         this.remainingCapacity = remainingCapacity;
     }
+
+    public String toString() {
+        return "Id: " + id + " Floor: " + floor + ", Room: " + room + ", #items: " + numItems() + ", Load: " + 0 ;
+    }
+
+    public boolean isEmpty() { return items.isEmpty(); }
+
 
     public void place(int floor, int room) {
         Building building = Building.getBuilding();
@@ -61,7 +69,7 @@ public class Robot {
         }
     }
 
-    void transfer(Robot robot) {  // Transfers every item assuming receiving robot has capacity
+    public void transfer(Robot robot) {  // Transfers every item assuming receiving robot has capacity
         ListIterator<Item> iter = robot.items.listIterator();
         while(iter.hasNext()) {
             Item item = iter.next();
@@ -72,7 +80,7 @@ public class Robot {
         }
     }
 
-    void tick() {
+    public void tick() {
             Building building = Building.getBuilding();
             if (items.isEmpty()) {
                 // Return to MailRoom
@@ -98,10 +106,6 @@ public class Robot {
             }
     }
 
-    public String getId() {
-        return id;
-    }
-
     public int numItems () {
         return items.size();
     }
@@ -110,7 +114,7 @@ public class Robot {
         items.add(item);
     }
 
-    void sort() {
+    public void sort() {
         Collections.sort(items);
     }
 
