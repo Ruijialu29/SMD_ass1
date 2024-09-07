@@ -134,6 +134,9 @@ public class MailRoom {
     }
 
     public void flooringTick(){
+
+        robotDispatch();
+
         // Process the flooring robots(empty and loaded)
         for (Robot robot : activeRobots) {
             System.out.printf("About to tick: %s\n", robot);
@@ -143,8 +146,6 @@ public class MailRoom {
                 processLoadedFloorRobot(robot);
             }
         }
-
-        robotDispatch();
 
         processColumnRobots();
 
@@ -180,7 +181,7 @@ public class MailRoom {
         } else {
             if (((FloorRobot) robot).getTransferPosition() == 0) {
                 robot.move(Building.Direction.RIGHT);
-            } 
+            }
             else if (((FloorRobot) robot).getTransferPosition() == 1) {
                 robot.move(Building.Direction.LEFT);
             }
