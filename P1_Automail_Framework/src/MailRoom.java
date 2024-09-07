@@ -32,6 +32,12 @@ public class MailRoom {
         deactivatingRobots = new ArrayList<>();
         activeColumnRobots = new ArrayList<>();
 
+        initializeRobots();
+
+        
+    }
+
+    public void initializeRobots(){
         if(mode == Mode.CYCLING){
             for (int i = 0; i < numRobots; i++)
                 idleRobots.add(new CyclingRobot(MailRoom.this, capacity));  // In mailroom, floor/room is not significant
