@@ -4,4 +4,7 @@ public class ColumnRobot extends Robot{
         super(mailroom, remainingCapacity);
     }
 
+
 }
+
+

@@ -1,20 +1,19 @@
 import java.util.*;
 
-import static java.lang.String.format;
-
 public class MailRoom {
     public enum Mode {CYCLING, FLOORING}
     public List<Item>[] waitingForDelivery;
     private final int numRobots;
     private final Mode mode;
     private int capacity;
-    private int rooms;
+    public int rooms;
     private boolean isInitialized = false;
 
     Queue<Robot> idleRobots;
-    List<Robot> activeRobots;
+    List<FloorRobot> activeFloorRobots;
     List<Robot> deactivatingRobots; // Don't treat a robot as both active and idle by swapping directly
     List<Robot> activeColumnRobots;
+    List<Robot> activeRobots;
 
     public MailRoom(int numFloors, int numRobots, Mode mode, int capacity, int rooms) {
         this.mode = mode;
@@ -28,12 +27,12 @@ public class MailRoom {
         this.numRobots = numRobots;
 
         idleRobots = new LinkedList<>();
-        activeRobots = new ArrayList<>();
+        activeFloorRobots = new ArrayList<>();
         deactivatingRobots = new ArrayList<>();
         activeColumnRobots = new ArrayList<>();
+        activeRobots = new ArrayList<>();
 
         initializeRobots();
-
         
     }
 
@@ -47,7 +46,7 @@ public class MailRoom {
             idleRobots.add(new ColumnRobot(MailRoom.this, capacity));
             Building building = Building.getBuilding();
             for (int i = 0; i < building.NUMFLOORS; i++) {
-                activeRobots.add(new FloorRobot(MailRoom.this, capacity, i+1, 1, activeColumnRobots));
+                activeFloorRobots.add(new FloorRobot(MailRoom.this, capacity, i+1, 1, activeFloorRobots));
             }
         }
     }
@@ -84,48 +83,8 @@ public class MailRoom {
         }
     }
 
-    public int compareArrivalTime(Robot r1, Robot r2){
-
-        Collections.sort(r1.items, Comparator.comparingInt(Item::myArrival));
-        Collections.sort(r2.items, Comparator.comparingInt(Item::myArrival));
-
-        int arrivalTime1 = r1.items.get(0).myArrival();
-        int arrivalTime2 = r2.items.get(0).myArrival();
-
-        return Integer.compare(arrivalTime1, arrivalTime2);
-
-    }
-
-    public int checkWaitingPosition(Robot r){
-
-        Robot leftRobot = null;
-        Robot rightRobot = null;
-
-        for(Robot robot : activeColumnRobots){
-            if(robot.getFloor() == r.getFloor() && !robot.items.isEmpty() && robot.items.get(0).myFloor() == r.getFloor()){
-                if(robot.getRoom() == 0){
-                    leftRobot = robot;
-                }
-                else if(robot.getRoom() == (rooms + 1)){
-                    rightRobot = robot; 
-                }
-            }
-        }
-
-        if (leftRobot != null && rightRobot == null) {
-            return 0;
-        } else if (leftRobot == null && rightRobot != null) {
-            return 1;
-        } else if (leftRobot != null && rightRobot != null) {
-            return compareArrivalTime(leftRobot, rightRobot);
-        }
-    
-        return -1;
-
-    }
-
     public void cyclingTick(){
-        for (Robot activeRobot : activeRobots) {
+        for (Robot activeRobot : activeFloorRobots) {
             System.out.printf("About to tick: " + activeRobot.toString() + "\n"); activeRobot.tick();
         }
         robotDispatch();  // dispatch a robot if conditions are met
@@ -134,7 +93,7 @@ public class MailRoom {
         while (iter.hasNext()) {  // In timestamp order
             Robot robot = iter.next();
             iter.remove();
-            activeRobots.remove(robot);
+            activeFloorRobots.remove(robot);
             idleRobots.add(robot);
         }
     }
@@ -144,72 +103,23 @@ public class MailRoom {
         robotDispatch();
 
         // Process the flooring robots(empty and loaded)
-        for (Robot robot : activeRobots) {
+        for (FloorRobot robot : activeFloorRobots) {
             System.out.printf("About to tick: %s\n", robot);
             if (robot.items.isEmpty()) {
-                processEmptyFloorRobot(robot);
+                robot.processEmptyFloorRobot();
             } else {
-                processLoadedFloorRobot(robot);
+                robot.processLoadedFloorRobot();
             }
         }
 
-        processColumnRobots();
+        for (Robot robot : activeColumnRobots){
+            robot.processColumnRobots();
+        }
 
         dispatchIdleRobots();
 
         processDeactivatingRobots();
 
-    }
-
-    public void processEmptyFloorRobot(Robot robot){
-        int waitingPosition = checkWaitingPosition(robot);
-        if (waitingPosition == 0 && robot.getRoom() == 1) {
-            transferItemToRobot(robot, "R1", 0);
-        }   
-        else if (waitingPosition == 0 && robot.getRoom() != 1) {
-            robot.move(Building.Direction.LEFT);
-        }   
-        else if (waitingPosition == 1 && robot.getRoom() == rooms) {
-            transferItemToRobot(robot, "R2", 1);
-        }   
-        else if (waitingPosition == 1 && robot.getRoom() != rooms) {
-            robot.move(Building.Direction.RIGHT);
-        }
-    }
-
-    public void processLoadedFloorRobot(Robot robot) {
-        if (robot.getFloor() == robot.items.getFirst().myFloor() && robot.getRoom() == robot.items.getFirst().myRoom()) {
-            do {
-                Item firstItem = robot.items.get(0);
-                robot.setRemainingCapacity(robot.getRemainingCapacity() + firstItem.myWeight());
-                Simulation.deliver(robot.items.removeFirst());
-            } while (!robot.items.isEmpty() && robot.getRoom() == robot.items.get(0).myRoom());
-        } else {
-            if (((FloorRobot) robot).getTransferPosition() == 0) {
-                robot.move(Building.Direction.RIGHT);
-            }
-            else if (((FloorRobot) robot).getTransferPosition() == 1) {
-                robot.move(Building.Direction.LEFT);
-            }
-        }
-    }
-
-    public void transferItemToRobot(Robot robot, String providerId, int transferPosition) {
-        Robot providerRobot = activeColumnRobots.stream().filter(columnRobot -> columnRobot.getId().equals(providerId)).findFirst().orElse(null);
-        if (providerRobot != null) {
-            robot.transfer(providerRobot);
-        }
-        ((FloorRobot) robot).setTransferPosition(transferPosition);
-    }
-
-    public void processColumnRobots() {
-        for (Robot robot : activeColumnRobots) {
-            if (!robot.items.isEmpty() && robot.getFloor() != robot.items.get(0).myFloor()) {
-                robot.move(Building.Direction.UP);
-            } else if (robot.items.isEmpty() && robot.getFloor() != 0) {
-                robot.move(Building.Direction.DOWN);
-            }
-        }
     }
 
     public void dispatchIdleRobots() {
@@ -220,7 +130,7 @@ public class MailRoom {
             if (earliestFloor >= 0) {
                 Robot robot = idleRobots.remove();
                 length--;
-                loadRobot(earliestFloor, robot);
+                robot.loadRobot(earliestFloor, robot);
 
                 if (robot.getId().equals("R1")) {
                     robot.sort();
@@ -270,7 +180,7 @@ public class MailRoom {
                 int fwei = floorWithEarliestItem();
                 if (fwei >= 0) {  // Need an item or items to deliver, starting with earliest
                     Robot robot = idleRobots.remove();
-                    loadRobot(fwei, robot);
+                    robot.loadRobot(fwei, robot);
                     // Room order for left to right delivery
                     robot.sort();
                     activeRobots.add(robot);
@@ -285,45 +195,12 @@ public class MailRoom {
             // Dispatch floor robots
             if (!isInitialized) {
                 int floor = 1;
-                for (Robot robot : activeRobots) {
+                for (Robot robot : activeFloorRobots) {
                     robot.place(floor, 1);
                     floor += 1;
                 }
                 isInitialized = true; 
             }
-        }
-    }
-
-    public void robotReturn(Robot robot) {
-        Building building = Building.getBuilding();
-        int floor = robot.getFloor();
-        int room = robot.getRoom();
-        assert floor == 0 && room == building.NUMROOMS+1: format("robot returning from wrong place - floor=%d, room ==%d", floor, room);
-        assert robot.isEmpty() : "robot has returned still carrying at least one item";
-        building.remove(floor, room);
-        deactivatingRobots.add(robot);
-    }
-
-    public void loadRobot(int floor, Robot robot) {
-        Collections.sort(waitingForDelivery[floor], Comparator.comparingInt(Item::myArrival));
-
-        ListIterator<Item> iter = waitingForDelivery[floor].listIterator();
-        int remainingCapacity = robot.getRemainingCapacity();
-
-        while (iter.hasNext()) {  // In timestamp order
-            Item item = iter.next();
-            if(item.myWeight() == 0){
-                robot.add(item); //Hand it over
-                iter.remove();
-            }
-            else if(item.myWeight() > 0 && item.myWeight() <= remainingCapacity){
-                robot.add(item); //Hand it over
-                remainingCapacity -= item.myWeight();
-                iter.remove();
-
-                robot.setRemainingCapacity(remainingCapacity);
-            }
-
         }
     }
 

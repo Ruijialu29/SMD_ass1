@@ -1,5 +1,8 @@
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -11,7 +14,7 @@ public class Robot {
     protected int load;
     private int remainingCapacity;
 
-    final private MailRoom mailroom;
+    final protected MailRoom mailroom;
     final protected List<Item> items = new ArrayList<>();
 
     public Robot(MailRoom mailroom, int remainingCapacity) {
@@ -51,7 +54,6 @@ public class Robot {
 
     public boolean isEmpty() { return items.isEmpty(); }
 
-
     public void place(int floor, int room) {
         Building building = Building.getBuilding();
         building.place(floor, room, id);
@@ -74,7 +76,7 @@ public class Robot {
             floor = dfloor; room = droom;
             if (floor == 0) {
                 System.out.printf("About to return: " + this + "\n");
-                mailroom.robotReturn(this);
+                robotReturn(this);
             }
         }
     }
@@ -133,6 +135,88 @@ public class Robot {
 
     public void sort() {
         Collections.sort(items);
+    }
+
+    public int compareArrivalTime(Robot r1, Robot r2){
+
+        Collections.sort(r1.items, Comparator.comparingInt(Item::myArrival));
+        Collections.sort(r2.items, Comparator.comparingInt(Item::myArrival));
+
+        int arrivalTime1 = r1.items.get(0).myArrival();
+        int arrivalTime2 = r2.items.get(0).myArrival();
+
+        return Integer.compare(arrivalTime1, arrivalTime2);
+
+    }
+
+    public int checkWaitingPosition(Robot r){
+
+        Robot leftRobot = null;
+        Robot rightRobot = null;
+
+        for(Robot robot : mailroom.activeColumnRobots){
+            if(robot.getFloor() == r.getFloor() && !robot.items.isEmpty() && robot.items.get(0).myFloor() == r.getFloor()){
+                if(robot.getRoom() == 0){
+                    leftRobot = robot;
+                }
+                else if(robot.getRoom() == (mailroom.rooms + 1)){
+                    rightRobot = robot; 
+                }
+            }
+        }
+
+        if (leftRobot != null && rightRobot == null) {
+            return 0;
+        } else if (leftRobot == null && rightRobot != null) {
+            return 1;
+        } else if (leftRobot != null && rightRobot != null) {
+            return r.compareArrivalTime(leftRobot, rightRobot);
+        }
+    
+        return -1;
+
+    }
+
+    public void processColumnRobots() {
+        if (!this.items.isEmpty() && this.getFloor() != this.items.get(0).myFloor()) {
+            this.move(Building.Direction.UP);
+        } 
+        else if (this.items.isEmpty() && this.getFloor() != 0) {
+            this.move(Building.Direction.DOWN);
+        }
+    }
+
+    public void robotReturn(Robot robot) {
+        Building building = Building.getBuilding();
+        int floor = robot.getFloor();
+        int room = robot.getRoom();
+        assert floor == 0 && room == building.NUMROOMS+1: format("robot returning from wrong place - floor=%d, room ==%d", floor, room);
+        assert robot.isEmpty() : "robot has returned still carrying at least one item";
+        building.remove(floor, room);
+        mailroom.deactivatingRobots.add(robot);
+    }
+
+    public void loadRobot(int floor, Robot robot) {
+        Collections.sort(mailroom.waitingForDelivery[floor], Comparator.comparingInt(Item::myArrival));
+
+        ListIterator<Item> iter = mailroom.waitingForDelivery[floor].listIterator();
+        int remainingCapacity = robot.getRemainingCapacity();
+
+        while (iter.hasNext()) {  // In timestamp order
+            Item item = iter.next();
+            if(item.myWeight() == 0){
+                robot.add(item); //Hand it over
+                iter.remove();
+            }
+            else if(item.myWeight() > 0 && item.myWeight() <= remainingCapacity){
+                robot.add(item); //Hand it over
+                remainingCapacity -= item.myWeight();
+                iter.remove();
+
+                robot.setRemainingCapacity(remainingCapacity);
+            }
+
+        }
     }
 
 }
