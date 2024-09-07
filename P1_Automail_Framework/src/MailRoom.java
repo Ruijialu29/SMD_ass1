@@ -138,9 +138,9 @@ public class MailRoom {
         for (Robot robot : activeRobots) {
             System.out.printf("About to tick: %s\n", robot);
             if (robot.items.isEmpty()) {
-                processEmptyFlooringRobot(robot);
+                processEmptyFloorRobot(robot);
             } else {
-                processLoadedFlooringRobot(robot);
+                processLoadedFloorRobot(robot);
             }
         }
 
@@ -154,7 +154,7 @@ public class MailRoom {
 
     }
 
-    public void processEmptyFlooringRobot(Robot robot){
+    public void processEmptyFloorRobot(Robot robot){
         int waitingPosition = checkWaitingPosition(robot);
         if (waitingPosition == 0 && robot.getRoom() == 1) {
             transferItemToRobot(robot, "R1", 0);
@@ -170,7 +170,7 @@ public class MailRoom {
         }
     }
 
-    public void processLoadedFlooringRobot(Robot robot) {
+    public void processLoadedFloorRobot(Robot robot) {
         if (robot.getFloor() == robot.items.getFirst().myFloor() && robot.getRoom() == robot.items.getFirst().myRoom()) {
             do {
                 Item firstItem = robot.items.get(0);
