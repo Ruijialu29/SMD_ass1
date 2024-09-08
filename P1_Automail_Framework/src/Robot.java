@@ -219,4 +219,14 @@ public class Robot {
         }
     }
 
+    public static void processDeactivatingRobots(MailRoom mailroom) {
+        ListIterator<Robot> iterator = mailroom.deactivatingRobots.listIterator();
+        while (iterator.hasNext()) {
+            Robot robot = iterator.next();
+            iterator.remove();
+            mailroom.activeColumnRobots.remove(robot);
+            mailroom.idleRobots.add(robot);
+        }
+    }
+
 }

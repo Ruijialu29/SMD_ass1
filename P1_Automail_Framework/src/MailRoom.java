@@ -51,38 +51,6 @@ public class MailRoom {
         }
     }
 
-    public boolean someItems() {
-        for (int i = 0; i < Building.getBuilding().NUMFLOORS; i++) {
-            if (!waitingForDelivery[i].isEmpty()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public int floorWithEarliestItem() {
-        int floor = -1;
-        int earliest = Simulation.now() + 1;
-        for (int i = 0; i < Building.getBuilding().NUMFLOORS; i++) {
-            if (!waitingForDelivery[i].isEmpty()) {
-                int arrival = waitingForDelivery[i].getFirst().myArrival();
-                if (earliest > arrival) {
-                    floor = i;
-                    earliest = arrival;
-                }
-            }
-        }
-        return floor;
-    }
-
-    public void arrive(List<Item> items) {
-        for (Item item : items) {
-            waitingForDelivery[item.myFloor()-1].add(item);
-            System.out.printf("Item: Time = %d Floor = %d Room = %d Weight = %d\n",
-                    item.myArrival(), item.myFloor(), item.myRoom(), item.myWeight());
-        }
-    }
-
     public void cyclingTick(){
         for (Robot activeRobot : activeFloorRobots) {
             System.out.printf("About to tick: " + activeRobot.toString() + "\n"); activeRobot.tick();
@@ -118,7 +86,7 @@ public class MailRoom {
 
         dispatchIdleRobots();
 
-        processDeactivatingRobots();
+        Robot.processDeactivatingRobots(this);
 
     }
 
@@ -126,7 +94,7 @@ public class MailRoom {
         int length = idleRobots.size();
         while (length > 0) {
             System.out.println("Dispatch at time = " + Simulation.now());
-            int earliestFloor = floorWithEarliestItem();
+            int earliestFloor = Item.floorWithEarliestItem(this);
             if (earliestFloor >= 0) {
                 Robot robot = idleRobots.remove();
                 length--;
@@ -152,16 +120,6 @@ public class MailRoom {
         }
     }
 
-    public void processDeactivatingRobots() {
-        ListIterator<Robot> iterator = deactivatingRobots.listIterator();
-        while (iterator.hasNext()) {
-            Robot robot = iterator.next();
-            iterator.remove();
-            activeColumnRobots.remove(robot);
-            idleRobots.add(robot);
-        }
-    }
-
     public void tick() { 
         // Simulation time unit
         if(this.mode == Mode.CYCLING) {
@@ -177,7 +135,7 @@ public class MailRoom {
             System.out.println("Dispatch at time = " + Simulation.now());
             // Need an idle robot and space to dispatch (could be a traffic jam)
             if (!idleRobots.isEmpty() && !Building.getBuilding().isOccupied(0,0)) {
-                int fwei = floorWithEarliestItem();
+                int fwei = Item.floorWithEarliestItem(this);
                 if (fwei >= 0) {  // Need an item or items to deliver, starting with earliest
                     Robot robot = idleRobots.remove();
                     robot.loadRobot(fwei, robot);

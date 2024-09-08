@@ -68,13 +68,13 @@ public class Simulation {
     void step() {
         // External events
         if (waitingToArrive.containsKey(time))
-            mailroom.arrive(waitingToArrive.get(time));
+            Item.arrive(mailroom, waitingToArrive.get(time));
         // Internal events
         mailroom.tick();
         }
 
     void run() {
-        while (time++ <= endArrival || mailroom.someItems()) {
+        while (time++ <= endArrival || Item.someItems(mailroom)) {
             step();
             try {
                 TimeUnit.MILLISECONDS.sleep(timeout);

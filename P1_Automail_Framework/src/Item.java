@@ -1,8 +1,12 @@
+import java.util.List;
+
 public class Item implements Comparable<Item> {
     protected final int floor;
     protected final int room;
     protected final int arrival;
     protected int weight;
+
+    protected MailRoom mailroom;
 
     public Item(int floor, int room, int arrival, int weight) {
         this.floor = floor;
@@ -35,5 +39,37 @@ public class Item implements Comparable<Item> {
 
     public int myWeight() {
         return weight;
+    }
+
+    public static boolean someItems(MailRoom mailroom) {
+        for (int i = 0; i < Building.getBuilding().NUMFLOORS; i++) {
+            if (!mailroom.waitingForDelivery[i].isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static int floorWithEarliestItem(MailRoom mailroom) {
+        int floor = -1;
+        int earliest = Simulation.now() + 1;
+        for (int i = 0; i < Building.getBuilding().NUMFLOORS; i++) {
+            if (!mailroom.waitingForDelivery[i].isEmpty()) {
+                int arrival = mailroom.waitingForDelivery[i].getFirst().myArrival();
+                if (earliest > arrival) {
+                    floor = i;
+                    earliest = arrival;
+                }
+            }
+        }
+        return floor;
+    }
+
+    public static void arrive(MailRoom mailroom, List<Item> items) {
+        for (Item item : items) {
+            mailroom.waitingForDelivery[item.myFloor() - 1].add(item);
+            System.out.printf("Item: Time = %d Floor = %d Room = %d Weight = %d\n",
+                    item.myArrival(), item.myFloor(), item.myRoom(), item.myWeight());
+        }
     }
 }
