@@ -18,6 +18,34 @@ public class FloorRobot extends Robot{
         return transferPosition;
     }
 
+    public int checkWaitingPosition(Robot r){
+
+        Robot leftRobot = null;
+        Robot rightRobot = null;
+
+        for(Robot robot : mailroom.activeColumnRobots){
+            if(robot.getFloor() == r.getFloor() && !robot.items.isEmpty() && robot.items.get(0).myFloor() == r.getFloor()){
+                if(robot.getRoom() == 0){
+                    leftRobot = robot;
+                }
+                else if(robot.getRoom() == (mailroom.rooms + 1)){
+                    rightRobot = robot; 
+                }
+            }
+        }
+
+        if (leftRobot != null && rightRobot == null) {
+            return 0;
+        } else if (leftRobot == null && rightRobot != null) {
+            return 1;
+        } else if (leftRobot != null && rightRobot != null) {
+            return r.compareArrivalTime(leftRobot, rightRobot);
+        }
+    
+        return -1;
+
+    }
+
     public void processEmptyFloorRobot(){
         int waitingPosition = checkWaitingPosition(this);
         if (waitingPosition == 0 && this.getRoom() == 1) {

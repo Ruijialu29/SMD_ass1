@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 
-public class Robot {
+public class Robot implements compareArrivalTime{
     private static int count = 1;
     final private String id;
     protected int floor;
@@ -137,46 +137,6 @@ public class Robot {
         Collections.sort(items);
     }
 
-    public int compareArrivalTime(Robot r1, Robot r2){
-
-        Collections.sort(r1.items, Comparator.comparingInt(Item::myArrival));
-        Collections.sort(r2.items, Comparator.comparingInt(Item::myArrival));
-
-        int arrivalTime1 = r1.items.get(0).myArrival();
-        int arrivalTime2 = r2.items.get(0).myArrival();
-
-        return Integer.compare(arrivalTime1, arrivalTime2);
-
-    }
-
-    public int checkWaitingPosition(Robot r){
-
-        Robot leftRobot = null;
-        Robot rightRobot = null;
-
-        for(Robot robot : mailroom.activeColumnRobots){
-            if(robot.getFloor() == r.getFloor() && !robot.items.isEmpty() && robot.items.get(0).myFloor() == r.getFloor()){
-                if(robot.getRoom() == 0){
-                    leftRobot = robot;
-                }
-                else if(robot.getRoom() == (mailroom.rooms + 1)){
-                    rightRobot = robot; 
-                }
-            }
-        }
-
-        if (leftRobot != null && rightRobot == null) {
-            return 0;
-        } else if (leftRobot == null && rightRobot != null) {
-            return 1;
-        } else if (leftRobot != null && rightRobot != null) {
-            return r.compareArrivalTime(leftRobot, rightRobot);
-        }
-    
-        return -1;
-
-    }
-
     public void processColumnRobots() {
         if (!this.items.isEmpty() && this.getFloor() != this.items.get(0).myFloor()) {
             this.move(Building.Direction.UP);
@@ -195,6 +155,9 @@ public class Robot {
         building.remove(floor, room);
         mailroom.deactivatingRobots.add(robot);
     }
+
+
+    
 
     public void loadRobot(int floor, Robot robot) {
         Collections.sort(mailroom.waitingForDelivery[floor], Comparator.comparingInt(Item::myArrival));
