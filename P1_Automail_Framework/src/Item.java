@@ -9,8 +9,6 @@ public class Item implements Comparable<Item> {
     protected final int arrival;
     protected int weight;
 
-    //protected MailRoom mailroom;
-
     public static final Map<Integer, List<Item>> waitingToArrive = new HashMap<>();
     public static int deliveredCount = 0;
     public static int deliveredTotalTime = 0;

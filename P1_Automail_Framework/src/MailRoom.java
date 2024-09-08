@@ -8,7 +8,7 @@ public class MailRoom {
     protected int rooms;
     private boolean isInitialized = false;
 
-    public List<Item>[] waitingForDelivery;
+    List<Item>[] waitingForDelivery;
 
     Queue<Robot> idleRobots = new LinkedList<>();
     List<FloorRobot> activeFloorRobots = new ArrayList<>();
