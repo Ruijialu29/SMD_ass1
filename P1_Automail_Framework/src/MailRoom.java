@@ -57,8 +57,8 @@ public class MailRoom {
     }
 
     public void cyclingTick(){
-        for (Robot activeRobot : activeFloorRobots) {
-            System.out.printf("About to tick: " + activeRobot.toString() + "\n"); activeRobot.tick();
+        for (Robot activeRobot : activeRobots) {
+            System.out.printf("About to tick: " + activeRobot.toString() + "\n"); ((CyclingRobot) activeRobot).tick();
         }
         cyclingDispatch();  // dispatch a robot if conditions are met
         // These are returning robots who shouldn't be dispatched in the previous step

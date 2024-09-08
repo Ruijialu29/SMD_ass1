@@ -9,7 +9,7 @@ public class Item implements Comparable<Item> {
     protected final int arrival;
     protected int weight;
 
-    protected MailRoom mailroom;
+    //protected MailRoom mailroom;
 
     public static final Map<Integer, List<Item>> waitingToArrive = new HashMap<>();
     public static int deliveredCount = 0;
@@ -22,6 +22,7 @@ public class Item implements Comparable<Item> {
         this.weight = weight;
     }
 
+    @Override
     public String toString() {
         return "Floor: " + floor + ", Room: " + room + ", Arrival: " + arrival + ", Weight: " + weight;
     }

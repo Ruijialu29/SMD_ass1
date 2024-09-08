@@ -12,7 +12,7 @@ public class Robot implements compareArrivalTime{
     protected int floor;
     protected int room;
     protected int load;
-    private int remainingCapacity;
+    protected int remainingCapacity;
 
     final protected MailRoom mailroom;
     final protected List<Item> items = new ArrayList<>();
@@ -93,24 +93,6 @@ public class Robot implements compareArrivalTime{
         }
     }
 
-    public void tick() {
-            if (items.isEmpty()) {
-                returnToMailRoom();
-            } else {
-                // Items to deliver
-                deliverItems();
-            }
-    }
-
-    public void returnToMailRoom(){
-        Building building = Building.getBuilding();
-        if (room == building.NUMROOMS + 1) { // in right end column
-            move(Building.Direction.DOWN);  //move towards mailroom
-        } else {
-            move(Building.Direction.RIGHT); // move towards right end column
-        }
-    }
-
     public void robotReturn(Robot robot) {
         Building building = Building.getBuilding();
         int floor = robot.getFloor();
@@ -119,32 +101,6 @@ public class Robot implements compareArrivalTime{
         assert robot.isEmpty() : "robot has returned still carrying at least one item";
         building.remove(floor, room);
         mailroom.deactivatingRobots.add(robot);
-    }
-
-    public void deliverItems(){
-        if (floor == items.getFirst().myFloor()) {
-            // On the right floor
-            if (room == items.getFirst().myRoom()) { //then deliver all relevant items to that room
-                do {
-                    Item.deliver(items.removeFirst());
-                } while (!items.isEmpty() && room == items.getFirst().myRoom());
-            } else {
-                move(Building.Direction.RIGHT); // move towards next delivery
-            }
-        } else {
-            move(Building.Direction.UP); // move towards floor
-        }
-    }
-
-    public void transfer(Robot robot) {  // Transfers every item assuming receiving robot has capacity
-        ListIterator<Item> iter = robot.items.listIterator();
-        while(iter.hasNext()) {
-            Item item = iter.next();
-            this.add(item); //Hand it over
-            this.remainingCapacity -= item.myWeight();
-            iter.remove();
-            robot.setRemainingCapacity(robot.getRemainingCapacity() + item.myWeight());
-        }
     }
 
     public void loadRobot(int floor, Robot robot) {

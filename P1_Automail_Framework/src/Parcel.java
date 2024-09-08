@@ -4,10 +4,4 @@ public class Parcel extends Item {
         super(floor, room, arrival, weight);
     }
 
-    @Override
-    public String toString() {
-        return "Floor: " + floor + ", Room: " + room + ", Arrival: " + arrival + ", Weight: " + weight;
-    }
-
-
 }

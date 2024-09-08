@@ -1,4 +1,5 @@
 import java.util.List;
+import java.util.ListIterator;
 
 public class FloorRobot extends Robot{
 
@@ -85,5 +86,15 @@ public class FloorRobot extends Robot{
             this.transfer(providerRobot);
         }
         ((FloorRobot) this).setTransferPosition(transferPosition);
+    }
+    public void transfer(Robot robot) {  // Transfers every item assuming receiving robot has capacity
+        ListIterator<Item> iter = robot.items.listIterator();
+        while(iter.hasNext()) {
+            Item item = iter.next();
+            this.add(item); //Hand it over
+            this.remainingCapacity -= item.myWeight();
+            iter.remove();
+            robot.setRemainingCapacity(robot.getRemainingCapacity() + item.myWeight());
+        }
     }
 }
