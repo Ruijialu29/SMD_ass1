@@ -55,7 +55,7 @@ public class MailRoom {
         for (Robot activeRobot : activeFloorRobots) {
             System.out.printf("About to tick: " + activeRobot.toString() + "\n"); activeRobot.tick();
         }
-        robotDispatch();  // dispatch a robot if conditions are met
+        cyclingDispatch();  // dispatch a robot if conditions are met
         // These are returning robots who shouldn't be dispatched in the previous step
         ListIterator<Robot> iter = deactivatingRobots.listIterator();
         while (iter.hasNext()) {  // In timestamp order
@@ -67,8 +67,6 @@ public class MailRoom {
     }
 
     public void flooringTick(){
-
-        robotDispatch();
 
         // Process the flooring robots(empty and loaded)
         for (FloorRobot robot : activeFloorRobots) {
@@ -84,39 +82,52 @@ public class MailRoom {
             robot.processColumnRobots();
         }
 
-        dispatchIdleRobots();
+        flooringDispatch();
 
         Robot.processDeactivatingRobots(this);
 
     }
 
-    public void dispatchIdleRobots() {
-        int length = idleRobots.size();
-        while (length > 0) {
-            System.out.println("Dispatch at time = " + Simulation.now());
-            int earliestFloor = Item.floorWithEarliestItem(this);
-            if (earliestFloor >= 0) {
-                Robot robot = idleRobots.remove();
-                length--;
-                robot.loadRobot(earliestFloor, robot);
+    public void flooringDispatch() {
 
-                if (robot.getId().equals("R1")) {
-                    robot.sort();
-                } 
-                else if (robot.getId().equals("R2")) {
-                    robot.items.sort(Comparator.reverseOrder());
-                }
-
-                activeColumnRobots.add(robot);
-                System.out.printf("Dispatch @ %s of Robot %s with %d item(s)\n", Simulation.now(), robot.getId(), robot.numItems());
-
-                if (robot.getId().equals("R1")) {
-                    robot.place(0, 0);
-                }           
-                else if (robot.getId().equals("R2")) {
-                    robot.place(0, rooms + 1);
+        if(mode == Mode.FLOORING){
+            int length = idleRobots.size();
+            while (length > 0) {
+                System.out.println("Dispatch at time = " + Simulation.now());
+                int earliestFloor = Item.floorWithEarliestItem(this);
+                if (earliestFloor >= 0) {
+                    Robot robot = idleRobots.remove();
+                    length--;
+                    robot.loadRobot(earliestFloor, robot);
+    
+                    if (robot.getId().equals("R1")) {
+                        robot.sort();
+                    } 
+                    else if (robot.getId().equals("R2")) {
+                        robot.items.sort(Comparator.reverseOrder());
+                    }
+    
+                    activeColumnRobots.add(robot);
+                    System.out.printf("Dispatch @ %s of Robot %s with %d item(s)\n", Simulation.now(), robot.getId(), robot.numItems());
+    
+                    if (robot.getId().equals("R1")) {
+                        robot.place(0, 0);
+                    }           
+                    else if (robot.getId().equals("R2")) {
+                        robot.place(0, rooms + 1);
+                    }
                 }
             }
+        }
+
+        // Dispatch floor robots
+        if (!isInitialized) {
+            int floor = 1;
+            for (Robot robot : activeFloorRobots) {
+                robot.place(floor, 1);
+                floor += 1;
+            }
+            isInitialized = true; 
         }
     }
 
@@ -129,7 +140,7 @@ public class MailRoom {
         }
     }
 
-    public void robotDispatch() {
+    public void cyclingDispatch() {
         if(this.mode == Mode.CYCLING){
             // Can dispatch at most one robot; it needs to move out of the way for the next
             System.out.println("Dispatch at time = " + Simulation.now());
@@ -148,18 +159,9 @@ public class MailRoom {
                 }
             }
         }
-
-        else if(mode == Mode.FLOORING){
-            // Dispatch floor robots
-            if (!isInitialized) {
-                int floor = 1;
-                for (Robot robot : activeFloorRobots) {
-                    robot.place(floor, 1);
-                    floor += 1;
-                }
-                isInitialized = true; 
-            }
-        }
     }
 
+
 }
+
+
