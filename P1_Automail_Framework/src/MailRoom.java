@@ -2,35 +2,31 @@ import java.util.*;
 
 public class MailRoom {
     public enum Mode {CYCLING, FLOORING}
-    public List<Item>[] waitingForDelivery;
     private final int numRobots;
     private final Mode mode;
     private int capacity;
-    public int rooms;
+    protected int rooms;
     private boolean isInitialized = false;
 
-    Queue<Robot> idleRobots;
-    List<FloorRobot> activeFloorRobots;
-    List<Robot> deactivatingRobots; // Don't treat a robot as both active and idle by swapping directly
-    List<Robot> activeColumnRobots;
-    List<Robot> activeRobots;
+    public List<Item>[] waitingForDelivery;
+
+    Queue<Robot> idleRobots = new LinkedList<>();
+    List<FloorRobot> activeFloorRobots = new ArrayList<>();
+    List<Robot> deactivatingRobots = new ArrayList<>(); // Don't treat a robot as both active and idle by swapping directly
+    List<Robot> activeColumnRobots = new ArrayList<>();
+    List<Robot> activeRobots = new ArrayList<>();
 
     public MailRoom(int numFloors, int numRobots, Mode mode, int capacity, int rooms) {
+        this.numRobots = numRobots;
         this.mode = mode;
         this.capacity = capacity;
         this.rooms = rooms;
 
         waitingForDelivery = new List[numFloors];
+
         for (int i = 0; i < numFloors; i++) {
             waitingForDelivery[i] = new LinkedList<>();
         }
-        this.numRobots = numRobots;
-
-        idleRobots = new LinkedList<>();
-        activeFloorRobots = new ArrayList<>();
-        deactivatingRobots = new ArrayList<>();
-        activeColumnRobots = new ArrayList<>();
-        activeRobots = new ArrayList<>();
 
         initializeRobots();
         
@@ -48,6 +44,15 @@ public class MailRoom {
             for (int i = 0; i < building.NUMFLOORS; i++) {
                 activeFloorRobots.add(new FloorRobot(MailRoom.this, capacity, i+1, 1, activeFloorRobots));
             }
+        }
+    }
+
+    public void tick() {
+        // Simulation time unit
+        if(this.mode == Mode.CYCLING) {
+            cyclingTick();
+        } else if(this.mode == Mode.FLOORING) {
+            flooringTick();
         }
     }
 
@@ -79,12 +84,12 @@ public class MailRoom {
         }
 
         for (Robot robot : activeColumnRobots){
-            robot.processColumnRobots();
+            ((ColumnRobot) robot).processColumnRobots();
         }
 
         flooringDispatch();
 
-        Robot.processDeactivatingRobots(this);
+        ColumnRobot.processDeactivatingRobots(this);
 
     }
 
@@ -131,14 +136,6 @@ public class MailRoom {
         }
     }
 
-    public void tick() { 
-        // Simulation time unit
-        if(this.mode == Mode.CYCLING) {
-            cyclingTick();
-        } else if(this.mode == Mode.FLOORING) {
-            flooringTick();
-        }
-    }
 
     public void cyclingDispatch() {
         if(this.mode == Mode.CYCLING){

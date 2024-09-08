@@ -40,7 +40,6 @@ public class Robot implements compareArrivalTime{
         for(Item item: items){
             load += item.myWeight();
         }
-
         return load;
     }
 
@@ -53,6 +52,19 @@ public class Robot implements compareArrivalTime{
     }
 
     public boolean isEmpty() { return items.isEmpty(); }
+
+    public int numItems () {
+        return items.size();
+    }
+
+    public void add(Item item) {
+        items.add(item);
+    }
+
+    public void sort() {
+        Collections.sort(items);
+    }
+
 
     public void place(int floor, int room) {
         Building building = Building.getBuilding();
@@ -81,17 +93,6 @@ public class Robot implements compareArrivalTime{
         }
     }
 
-    public void transfer(Robot robot) {  // Transfers every item assuming receiving robot has capacity
-        ListIterator<Item> iter = robot.items.listIterator();
-        while(iter.hasNext()) {
-            Item item = iter.next();
-            this.add(item); //Hand it over
-            this.remainingCapacity -= item.myWeight();
-            iter.remove();
-            robot.setRemainingCapacity(robot.getRemainingCapacity() + item.myWeight());
-        }
-    }
-
     public void tick() {
             if (items.isEmpty()) {
                 returnToMailRoom();
@@ -110,6 +111,16 @@ public class Robot implements compareArrivalTime{
         }
     }
 
+    public void robotReturn(Robot robot) {
+        Building building = Building.getBuilding();
+        int floor = robot.getFloor();
+        int room = robot.getRoom();
+        assert floor == 0 && room == building.NUMROOMS+1: format("robot returning from wrong place - floor=%d, room ==%d", floor, room);
+        assert robot.isEmpty() : "robot has returned still carrying at least one item";
+        building.remove(floor, room);
+        mailroom.deactivatingRobots.add(robot);
+    }
+
     public void deliverItems(){
         if (floor == items.getFirst().myFloor()) {
             // On the right floor
@@ -125,39 +136,16 @@ public class Robot implements compareArrivalTime{
         }
     }
 
-    public int numItems () {
-        return items.size();
-    }
-
-    public void add(Item item) {
-        items.add(item);
-    }
-
-    public void sort() {
-        Collections.sort(items);
-    }
-
-    public void processColumnRobots() {
-        if (!this.items.isEmpty() && this.getFloor() != this.items.get(0).myFloor()) {
-            this.move(Building.Direction.UP);
-        } 
-        else if (this.items.isEmpty() && this.getFloor() != 0) {
-            this.move(Building.Direction.DOWN);
+    public void transfer(Robot robot) {  // Transfers every item assuming receiving robot has capacity
+        ListIterator<Item> iter = robot.items.listIterator();
+        while(iter.hasNext()) {
+            Item item = iter.next();
+            this.add(item); //Hand it over
+            this.remainingCapacity -= item.myWeight();
+            iter.remove();
+            robot.setRemainingCapacity(robot.getRemainingCapacity() + item.myWeight());
         }
     }
-
-    public void robotReturn(Robot robot) {
-        Building building = Building.getBuilding();
-        int floor = robot.getFloor();
-        int room = robot.getRoom();
-        assert floor == 0 && room == building.NUMROOMS+1: format("robot returning from wrong place - floor=%d, room ==%d", floor, room);
-        assert robot.isEmpty() : "robot has returned still carrying at least one item";
-        building.remove(floor, room);
-        mailroom.deactivatingRobots.add(robot);
-    }
-
-
-    
 
     public void loadRobot(int floor, Robot robot) {
         Collections.sort(mailroom.waitingForDelivery[floor], Comparator.comparingInt(Item::myArrival));
@@ -178,18 +166,6 @@ public class Robot implements compareArrivalTime{
 
                 robot.setRemainingCapacity(remainingCapacity);
             }
-
         }
     }
-
-    public static void processDeactivatingRobots(MailRoom mailroom) {
-        ListIterator<Robot> iterator = mailroom.deactivatingRobots.listIterator();
-        while (iterator.hasNext()) {
-            Robot robot = iterator.next();
-            iterator.remove();
-            mailroom.activeColumnRobots.remove(robot);
-            mailroom.idleRobots.add(robot);
-        }
-    }
-
 }

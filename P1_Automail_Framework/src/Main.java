@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class Main {
-    public static final String DEFAULT_PROPERTIES_PATH = "properties/test.properties";
+    public static final String DEFAULT_PROPERTIES_PATH = "P1_Automail_Framework/properties/test.properties";
 
     public static Properties loadPropertiesFile(String propertiesFile) {
         System.out.println("Working Directory = " + System.getProperty("user.dir"));
