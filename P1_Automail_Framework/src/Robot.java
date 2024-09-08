@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 
-public class Robot implements compareArrivalTime{
+public class Robot implements CompareArrivalTime{
     private static int count = 1;
     final private String id;
     protected int floor;

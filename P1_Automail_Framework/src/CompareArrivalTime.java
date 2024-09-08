@@ -1,7 +1,7 @@
 import java.util.Collections;
 import java.util.Comparator;
 
-public interface compareArrivalTime {
+public interface CompareArrivalTime {
     default int compareArrivalTime(Robot r1, Robot r2){
 
         Collections.sort(r1.items, Comparator.comparingInt(Item::myArrival));
