@@ -115,7 +115,7 @@ public class Robot {
             // On the right floor
             if (room == items.getFirst().myRoom()) { //then deliver all relevant items to that room
                 do {
-                    Simulation.deliver(items.removeFirst());
+                    Item.deliver(items.removeFirst());
                 } while (!items.isEmpty() && room == items.getFirst().myRoom());
             } else {
                 move(Building.Direction.RIGHT); // move towards next delivery

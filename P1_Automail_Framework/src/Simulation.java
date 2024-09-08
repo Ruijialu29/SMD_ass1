@@ -4,31 +4,10 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class Simulation {
-    private static final Map<Integer, List<Item>> waitingToArrive = new HashMap<>();
     private static int time = 0;
     public final int endArrival;
     final public MailRoom mailroom;
     private static int timeout;
-
-    private static int deliveredCount = 0;
-    private static int deliveredTotalTime = 0;
-
-    public static void deliver(Item mailItem) {
-        System.out.println("Delivered: " + mailItem);
-        deliveredCount++;
-        deliveredTotalTime += now() - mailItem.myArrival();
-    }
-
-    void addToArrivals(int arrivalTime, Item item) {
-        System.out.println(item.toString());
-        if (waitingToArrive.containsKey(arrivalTime)) {
-            waitingToArrive.get(arrivalTime).add(item);
-        } else {
-            LinkedList<Item> items = new LinkedList<>();
-            items.add(item);
-            waitingToArrive.put(arrivalTime, items);
-        }
-    }
 
     Simulation(Properties properties) {
         int seed = Integer.parseInt(properties.getProperty("seed"));
@@ -51,7 +30,7 @@ public class Simulation {
             int arrivalTime = random.nextInt(endArrival)+1;
             int floor = random.nextInt(building.NUMFLOORS)+1;
             int room = random.nextInt(building.NUMROOMS)+1;
-            addToArrivals(arrivalTime, new Letter(floor, room, arrivalTime, 0));
+            Item.addToArrivals(arrivalTime, new Letter(floor, room, arrivalTime, 0));
         }
         for (int i = 0; i < numParcels; i++) { // Generate parcels
             int arrivalTime = random.nextInt(endArrival)+1;
@@ -59,7 +38,7 @@ public class Simulation {
             int room = random.nextInt(building.NUMROOMS)+1;
             int weight = random.nextInt(maxWeight)+1;
             // What am I going to do with all these values?
-            addToArrivals(arrivalTime, new Parcel(floor, room, arrivalTime, weight));
+            Item.addToArrivals(arrivalTime, new Parcel(floor, room, arrivalTime, weight));
         }
     }
 
@@ -67,8 +46,8 @@ public class Simulation {
 
     void step() {
         // External events
-        if (waitingToArrive.containsKey(time))
-            Item.arrive(mailroom, waitingToArrive.get(time));
+        if (Item.waitingToArrive.containsKey(time))
+            Item.arrive(mailroom, Item.waitingToArrive.get(time));
         // Internal events
         mailroom.tick();
         }
@@ -83,7 +62,7 @@ public class Simulation {
             }
         }
         System.out.printf("Finished: Items delivered = %d; Average time for delivery = %.2f%n",
-                deliveredCount, (float) deliveredTotalTime/deliveredCount);
+                Item.deliveredCount, (float) Item.deliveredTotalTime/Item.deliveredCount);
     }
 
 }

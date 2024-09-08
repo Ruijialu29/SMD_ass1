@@ -1,4 +1,7 @@
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class Item implements Comparable<Item> {
     protected final int floor;
@@ -7,6 +10,10 @@ public class Item implements Comparable<Item> {
     protected int weight;
 
     protected MailRoom mailroom;
+
+    public static final Map<Integer, List<Item>> waitingToArrive = new HashMap<>();
+    public static int deliveredCount = 0;
+    public static int deliveredTotalTime = 0;
 
     public Item(int floor, int room, int arrival, int weight) {
         this.floor = floor;
@@ -39,6 +46,23 @@ public class Item implements Comparable<Item> {
 
     public int myWeight() {
         return weight;
+    }
+
+    public static void deliver(Item mailItem) {
+        System.out.println("Delivered: " + mailItem);
+        deliveredCount++;
+        deliveredTotalTime += Simulation.now() - mailItem.myArrival();
+    }
+
+    public static void addToArrivals(int arrivalTime, Item item) {
+        System.out.println(item.toString());
+        if (waitingToArrive.containsKey(arrivalTime)) {
+            waitingToArrive.get(arrivalTime).add(item);
+        } else {
+            LinkedList<Item> items = new LinkedList<>();
+            items.add(item);
+            waitingToArrive.put(arrivalTime, items);
+        }
     }
 
     public static boolean someItems(MailRoom mailroom) {

@@ -39,7 +39,7 @@ public class FloorRobot extends Robot{
             do {
                 Item firstItem = this.items.get(0);
                 this.setRemainingCapacity(this.getRemainingCapacity() + firstItem.myWeight());
-                Simulation.deliver(this.items.removeFirst());
+                Item.deliver(this.items.removeFirst());
             } while (!this.items.isEmpty() && this.getRoom() == this.items.get(0).myRoom());
         } else {
             if (((FloorRobot) this).getTransferPosition() == 0) {
