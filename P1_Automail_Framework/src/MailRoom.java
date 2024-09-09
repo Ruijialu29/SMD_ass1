@@ -93,6 +93,7 @@ public class MailRoom {
 
     }
 
+    // dispatch floor robot and column robot in the flooring mode
     public void flooringDispatch() {
 
         if(mode == Mode.FLOORING){
@@ -137,6 +138,7 @@ public class MailRoom {
     }
 
 
+    // dispatch cycling robot in cycling mode
     public void cyclingDispatch() {
         if(this.mode == Mode.CYCLING){
             // Can dispatch at most one robot; it needs to move out of the way for the next

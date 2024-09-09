@@ -13,6 +13,7 @@ public class CyclingRobot extends Robot{
         }
     }
 
+    // when cycling robot finished delivery, robot move down or right until reaching the ladder to return to mail room
     public void returnToMailRoom(){
         Building building = Building.getBuilding();
         if (room == building.NUMROOMS + 1) { // in right end column
@@ -22,6 +23,8 @@ public class CyclingRobot extends Robot{
         }
     }
 
+    // when robot reach the right floor, then deliver items and move to next delivery on the same floor
+    // else move up to the right floor
     public void deliverItems(){
         if (floor == items.getFirst().myFloor()) {
             // On the right floor

@@ -93,6 +93,7 @@ public class Robot implements CompareArrivalTime{
         }
     }
 
+    // check whether robot return to mail room, and turn active robot into deactivating.
     public void robotReturn(Robot robot) {
         Building building = Building.getBuilding();
         int floor = robot.getFloor();
@@ -103,6 +104,7 @@ public class Robot implements CompareArrivalTime{
         mailroom.deactivatingRobots.add(robot);
     }
 
+    // transfer items in the mail room to the robot
     public void loadRobot(int floor, Robot robot) {
         Collections.sort(mailroom.waitingForDelivery[floor], Comparator.comparingInt(Item::myArrival));
 

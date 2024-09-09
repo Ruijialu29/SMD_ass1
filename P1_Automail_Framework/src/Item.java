@@ -73,6 +73,7 @@ public class Item implements Comparable<Item> {
         return false;
     }
 
+    // find the floor according to the earliest arrival time of the item
     public static int floorWithEarliestItem(MailRoom mailroom) {
         int floor = -1;
         int earliest = Simulation.now() + 1;

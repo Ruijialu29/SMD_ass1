@@ -19,6 +19,7 @@ public class FloorRobot extends Robot{
         return transferPosition;
     }
 
+    // floor robot check whether there is a column robot waiting on the left or right
     public int checkWaitingPosition(Robot r){
 
         Robot leftRobot = null;
@@ -47,6 +48,9 @@ public class FloorRobot extends Robot{
 
     }
 
+    // process empty floor robot
+    // column robot waiting on the left or right, floor robot is adjacent to it, then transfer items
+    // column robot waiting, floor robot is not adjacent to it, then move to column robot
     public void processEmptyFloorRobot(){
         int waitingPosition = checkWaitingPosition(this);
         if (waitingPosition == 0 && this.getRoom() == 1) {
@@ -63,6 +67,8 @@ public class FloorRobot extends Robot{
         }
     }
 
+    // process loaded floor robot
+    // find the right destination, deliver items and update capacity
     public void processLoadedFloorRobot() {
         if (this.getFloor() == this.items.getFirst().myFloor() && this.getRoom() == this.items.getFirst().myRoom()) {
             do {
